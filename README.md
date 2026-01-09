@@ -1,1 +1,1 @@
-# advent-of-fpga-2026
+# Advent-of-FPGA-2026
