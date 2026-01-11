@@ -21,7 +21,7 @@ def solution_part1(puzzle_input):
 
   return actual_password
 
-print(str(solution_part1('input.txt')) + ' is the solutiondo for Part 1 of AoC 2025 - Day 1: Secret Entrance.')
+print(str(solution_part1('input.txt')) + ' is the solution for Part 1 of AoC 2025 - Day 1: Secret Entrance.')
 
 def solution_part2(puzzle_input):
   '''
