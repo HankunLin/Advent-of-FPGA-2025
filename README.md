@@ -12,6 +12,7 @@ The [2025 Advent of FPGA Challenge](https://blog.janestreet.com/advent-of-fpga-c
 - https://github.com/janestreet/hardcaml_template_project/tree/with-extensions 
 - https://www.janestreet.com/web-app/hardcaml-docs/introduction/why 
 - https://blog.janestreet.com/advent-of-hardcaml-2024/ 
+- https://ocamlstreet.gitbook.io/hardcaml-wiki
 
 # My Problem (AoC Day 1: Secret Entrance)
 
