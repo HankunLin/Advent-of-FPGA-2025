@@ -48,12 +48,14 @@ let simple_testbench (sim : Harness.Sim.t) =
 (* The [waves_config] argument to [Harness.run] determines where and how to save waveforms
    for viewing later with a waveform viewer. The commented examples below show how to save
    a waveterm file or a VCD file. *)
-let waves_config = Waves_config.no_waves
+(* let waves_config = Waves_config.no_waves *)
 
-(* let waves_config = *)
-(*   Waves_config.to_directory "/tmp/" *)
-(*   |> Waves_config.as_wavefile_format ~format:Hardcamlwaveform *)
-(* ;; *)
+let waves_config =
+  Waves_config.to_directory "/tmp/"
+  |> Waves_config.as_wavefile_format ~format:Hardcamlwaveform
+;;
+
+
 
 (* let waves_config = *)
 (*   Waves_config.to_directory "/tmp/" *)
@@ -62,7 +64,10 @@ let waves_config = Waves_config.no_waves
 
 let%expect_test "Simple test, optionally saving waveforms to disk" =
   Harness.run_advanced ~waves_config ~create:Range_finder.hierarchical simple_testbench;
-  [%expect {| (Result (range 146)) |}]
+  [%expect {|
+    (Result (range 146))
+    Saved waves to /tmp/test_range_finder_ml_Simple_test__optionally_saving_waveforms_to_disk.hardcamlwaveform
+    |}]
 ;;
 
 let%expect_test "Simple test with printing waveforms directly" =
