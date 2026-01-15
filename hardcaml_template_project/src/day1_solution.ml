@@ -1,32 +1,25 @@
-(* An example design that takes a series of input values and calculates the range between 
-   the largest and smallest one. *)
-
-(* We generally open Core and Hardcaml in any source file in a hardware project. For
-   design source files specifically, we also open Signal. *)
 open! Core
 open! Hardcaml
 open! Signal
-
-let num_bits = 16
 
 (* Every hardcaml module should have an I and an O record, which define the module
    interface. *)
 module I = struct
   type 'a t =
     { clock : 'a
-    ; clear : 'a
-    ; start : 'a
-    ; finish : 'a
-    ; data_in : 'a [@bits num_bits]
-    ; data_in_valid : 'a
+    ; reset : 'a
+    ; valid : 'a
+    ; dir : 'a
+    ; count : 'a [@bits 32]
     }
   [@@deriving hardcaml]
 end
 
 module O = struct
   type 'a t =
-    { (* With_valid.t is an Interface type that contains a [valid] and a [value] field. *)
-      range : 'a With_valid.t [@bits num_bits]
+    { hits : 'a [@bits 32]
+    ; passes : 'a [@bits 32]
+    ; ready : 'a
     }
   [@@deriving hardcaml]
 end
@@ -39,55 +32,52 @@ module States = struct
   [@@deriving sexp_of, compare ~localize, enumerate]
 end
 
-let create scope ({ clock; clear; start; finish; data_in; data_in_valid } : _ I.t) : _ O.t
-  =
-  let spec = Reg_spec.create ~clock ~clear () in
+let create _scope ({ clock; reset; valid; dir; count } : _ I.t) : _ O.t =
+  let spec = Reg_spec.create ~clock ~clear:reset () in
+  (* Variables for dial, hits, and passes *)
+  let dial = Always.Variable.reg spec ~width:7 in
+  let hits = Always.Variable.reg spec ~width:32 in
+  let passes = Always.Variable.reg spec ~width:32 in
+  let ready = Signal.vdd in
+  (* always ready to accept input for Pt.1 *)
+
+  (* Sequential Logic *)
   let open Always in
-  let sm =
-    (* Note that the state machine defaults to initializing to the first state *)
-    State_machine.create (module States) spec
-  in
-  (* let%hw[_var] is a shorthand that automatically applies a name to the signal, which
-    will show up in waveforms. The [_var] version is used when working with the Always
-     DSL. *)
-  let%hw_var min = Variable.reg spec ~width:num_bits in
-  let%hw_var max = Variable.reg spec ~width:num_bits in
-  (* We don't need to name the range here since it's immediately used in the module
-     output, which is automatically named when instantiating with [hierarchical] *)
-  let range = Variable.wire ~default:(zero num_bits) () in
-  let range_valid = Variable.wire ~default:gnd () in
   compile
-    [ sm.switch
-        [ ( Idle
-          , [ when_
-                start
-                [ min <-- ones num_bits
-                ; max <-- zero num_bits
-                ; sm.set_next Accepting_inputs
-                ]
-            ] )
-        ; ( Accepting_inputs
-          , [ when_
-                data_in_valid
-                [ when_ (data_in <: min.value) [ min <-- data_in ]
-                ; when_ (data_in >: max.value) [ max <-- data_in ]
-                ]
-            ; when_ finish [ sm.set_next Done ]
-            ] )
-        ; ( Done
-          , [ range <-- max.value -: min.value
-            ; range_valid <-- vdd
-            ; when_ finish [ sm.set_next Accepting_inputs ]
-            ] )
+    [ if_
+        reset
+        [ dial <-- Signal.of_int_trunc ~width:7 50
+        ; hits <-- Signal.zero 32
+        ; passes <-- Signal.zero 32
+        ]
+        [ if_
+            valid
+            [ (let dial_ext = Signal.uresize ~width:32 dial.value in
+              let count_ext = Signal.uresize ~width:32 count in
+              let sum_right = Signal.(dial_ext +: count_ext) in
+              let sum_right_mod =
+                Signal.mux2
+                  Signal.(sum_right >=: Signal.of_int_trunc ~width:32 100)
+                  Signal.(sum_right -: Signal.of_int_trunc ~width:32 100)
+                  sum_right
+              in
+              let diff_left = Signal.(dial_ext -: count_ext) in
+              let diff_left_mod =
+                Signal.mux2
+                  Signal.(dial_ext <: count_ext)
+                  Signal.(Signal.of_int_trunc ~width:32 100 +: diff_left)
+                  diff_left
+              in
+              let dial_next_val = Signal.mux2 dir sum_right_mod diff_left_mod in
+              let dial_next = Signal.sel_bottom ~width:7 dial_next_val in
+              dial <-- dial_next)
+            ; (passes <-- Signal.(passes.value +: Signal.one 32))
+            ; when_
+                Signal.(dial.value ==: Signal.zero 7)
+                [ (hits <-- Signal.(hits.value +: Signal.one 32)) ]
+            ]
+            []
         ]
     ];
-  (* [.value] is used to get the underlying Signal.t from a Variable.t in the Always DSL. *)
-  { range = { value = range.value; valid = range_valid.value } }
-;;
-
-(* The [hierarchical] wrapper is used to maintain module hierarchy in the generated
-   waveforms and (optionally) the generated RTL. *)
-let hierarchical scope =
-  let module Scoped = Hierarchy.In_scope (I) (O) in
-  Scoped.hierarchical ~scope ~name:"range_finder" create
+  { O.hits = hits.value; O.passes = passes.value; O.ready }
 ;;
