@@ -1,4 +1,4 @@
-(* An example design that takes a series of input values and calculates the range between
+(* An example design that takes a series of input values and calculates the range between 
    the largest and smallest one. *)
 
 (* We generally open Core and Hardcaml in any source file in a hardware project. For
@@ -48,7 +48,7 @@ let create scope ({ clock; clear; start; finish; data_in; data_in_valid } : _ I.
     State_machine.create (module States) spec
   in
   (* let%hw[_var] is a shorthand that automatically applies a name to the signal, which
-     will show up in waveforms. The [_var] version is used when working with the Always
+    will show up in waveforms. The [_var] version is used when working with the Always
      DSL. *)
   let%hw_var min = Variable.reg spec ~width:num_bits in
   let%hw_var max = Variable.reg spec ~width:num_bits in

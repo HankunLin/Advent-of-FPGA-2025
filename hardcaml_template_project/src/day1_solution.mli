@@ -1,4 +1,4 @@
-(** An example design that takes a series of input values and calculates the range between
+(* An example design that takes a series of input values and calculates the range between
     the largest and smallest one. *)
 
 open! Core

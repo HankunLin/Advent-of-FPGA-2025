@@ -72,8 +72,8 @@ let%expect_test "Simple test, optionally saving waveforms to disk" =
 
 let%expect_test "Simple test with printing waveforms directly" =
   (* For simple tests, we can print the waveforms directly in an expect-test (and use the
-     command [dune promote] to update it after the tests run). This is useful for quickly
-     visualizing or documenting a simple circuit, but limits the amount of data that can
+    command [dune promote] to update it after the tests run). This is useful for quickly
+    visualizing or documenting a simple circuit, but limits the amount of data that can
      be shown. *)
   let display_rules =
     [ Display_rule.port_name_matches
