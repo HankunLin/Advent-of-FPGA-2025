@@ -3,4 +3,6 @@ _build
 *.merlin
 _opam
 input.txt
-
+input(1).txt
+message(1).txt
+message(2).txt
