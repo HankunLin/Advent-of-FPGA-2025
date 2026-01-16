@@ -18,7 +18,7 @@ The [2025 Advent of FPGA Challenge](https://blog.janestreet.com/advent-of-fpga-c
 
 Due to time constraints and my experience with Hardcaml, I will be solving the AoC Day 1 problem [“Secret Entrance”](https://adventofcode.com/2025/day/1) for the Advent of FPGA.
 
-A short TLDR of Part 1 of Day 1: Secret Entrance:
+TLDR of Part 1 of Day 1: Secret Entrance:
 - You are trying to obtain the password for a secret North Pole base which is locked in a safe that has a dial with an arrow on it; around the dial are the numbers 0 through 99 in order. These numbers click as the arrow on the dial reaches each number.
 - The puzzle input for the problem contains a sequence of rotations, one per line, that tell you how to open the safe.
 - A rotation starts with an L or R which indicates the direction the rotation should be in:
@@ -28,9 +28,11 @@ A short TLDR of Part 1 of Day 1: Secret Entrance:
 - The dial starts by pointing at 50.
 - The actual password is the number of times the dial is left pointing at 0 after any rotation in the sequence.
 
-A short TLDR of Part 2 of Day 1: Secret Entrance:
+TLDR of Part 2 of Day 1: Secret Entrance:
 - Part 2 iterates on the solution for Part 1 where the solution is the number of times the dial crosses 0 instead of the number of times the dial is left pointing at 0 after any rotation.
 
-# Process to Determine the Solution
+# Solution Approach
 
 To find the solution, I first solved the problem using Python, a high-level language which I find effective for laying out and solving problems.
+This solution served as my base logic for solving the problem and is available as solution.py
+

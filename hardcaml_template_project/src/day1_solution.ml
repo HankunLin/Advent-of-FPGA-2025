@@ -49,7 +49,7 @@ let create _scope (inputs : _ I.t) : _ O.t =
   let remaining = Always.Variable.reg spec ~width:16 in (* clicks left to go in rotation *)
   let current_direction = Always.Variable.reg spec ~width:1 in (* stored direction *)
   
-  (* handshaking: transaction occurs when valid and ready are both high *)
+  (* handshaking, transaction occurs when valid and ready are both high *)
   let transaction = Signal.(inputs.instruction_valid &: sm.is Idle) in (* transaction occurs when new instruction is valid and Idle state*)
 
   (* compute next dial position for click-by-click rotation *)
