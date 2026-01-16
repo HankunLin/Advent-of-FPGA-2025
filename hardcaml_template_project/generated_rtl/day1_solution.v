@@ -1,4 +1,4 @@
-module day1_solution_top (
+module day1_solution_rtl (
     direction,
     clock,
     count,

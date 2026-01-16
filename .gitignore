@@ -8,3 +8,5 @@ message(1).txt
 message(2).txt
 .DS_Store*.bc
 *.exe
+generate.bc
+.DS_Store

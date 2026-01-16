@@ -1,39 +1,44 @@
 open! Core
 open! Hardcaml
 
+(* code runs automatically when file is executed *)
 let () =
+  (* define simulation module (w/ I/O interfaces) *)
   let module Sim =
     Cyclesim.With_interface
       (Hardcaml_demo_project.Day1_solution.I)
       (Hardcaml_demo_project.Day1_solution.O)
   in
-  (* Create the simulation *)
+  
+  (* create the simulation *)
   let sim =
     Sim.create
-      (Hardcaml_demo_project.Day1_solution.create (Scope.create ~flatten_design:true ()))
+      (Hardcaml_demo_project.Day1_solution.create (Scope.create ~flatten_design:true ())) (* generated design is flat and easier to simulate*)
   in
   let inputs = Cyclesim.inputs sim in
   let outputs = Cyclesim.outputs sim in
-  (* Helper for valid-ready handshaking protocol *)
-  (* Now properly waits for multi-cycle rotation to complete *)
+
+  (* helper function for sending rotation instructions to hardware module and handshake protocol*)
   let send_instruction ~direction ~count =
+    (* convert inputs to bits *)
     inputs.direction := Bits.of_bool direction;
     inputs.count := Bits.of_int_trunc ~width:16 count;
-    inputs.instruction_valid := Bits.vdd;
-    (* Wait for ready signal (should be immediate when in Idle state) *)
+    inputs.instruction_valid := Bits.vdd; (* asserts valid instruction signal for new instruction *)
+    
+    (* wait for ready signal *)
     let rec wait_ready () =
       if Bits.to_bool !(outputs.instruction_ready)
       then ()
       else (
-        Cyclesim.cycle sim;
+        Cyclesim.cycle sim; (* loop until ready condition is met *)
         wait_ready ())
     in
     wait_ready ();
     (* Transaction completes on this cycle (both valid and ready are high) *)
-    Cyclesim.cycle sim;
-    inputs.instruction_valid := Bits.gnd;
-    (* Wait for processing to complete (module returns to Idle/ready state) *)
-    (* This may take many cycles for Part 2's click-by-click rotation *)
+    Cyclesim.cycle sim; (* sim advances by 1 clock cycle (instruction registered by hardware) *)
+    inputs.instruction_valid := Bits.gnd; (* indicates instruction sent *)
+    
+    (* wait for hardware processing to complete (can take multiple cycles until function returns to idle) *)
     let rec wait_complete () =
       if Bits.to_bool !(outputs.instruction_ready)
       then ()
@@ -43,34 +48,42 @@ let () =
     in
     wait_complete ()
   in
-  (* Reset the circuit *)
-  inputs.reset := Bits.vdd;
+  
+  (* reset the hardware module *)
+  inputs.reset := Bits.vdd; (* registers & sm returns to initial values*)
   inputs.instruction_valid := Bits.gnd;
   Cyclesim.cycle sim;
   inputs.reset := Bits.gnd;
-  Cyclesim.cycle sim;
-  (* Read input file - configurable via INPUT_FILE env var *)
+  Cyclesim.cycle sim; (* cycle to go back to new state *)
+  
+  (* input file is read line-by-line *)
   let input_file =
     match Stdlib.Sys.getenv_opt "INPUT_FILE" with
     | Some path -> path
+    (* if input file not set... *)
     | None ->
       printf "ERROR: INPUT_FILE not set\n";
       printf "Usage: INPUT_FILE=input.txt dune test\n";
       exit 1
   in
+  
+  (* path to input file by testbench*)
   let resolved_file =
     if Stdlib.Sys.file_exists input_file
     then input_file
     else if Stdlib.Sys.file_exists ("../" ^ input_file)
     then "../" ^ input_file
+    (* file not found, tell user where to put input file*)
     else (
       printf "ERROR: File not found: %s\n" input_file;
       printf "Place your input file in hardcaml_template_project/\n";
       exit 1)
   in
+  
+  (* read & process rotation instructions *)
   let lines = In_channel.read_lines resolved_file in
   printf "Processing %d rotations from %s...\n" (List.length lines) resolved_file;
-  (* Process each instruction with handshaking *)
+  (* read each instruction with handshaking *)
   List.iter lines ~f:(fun line ->
     let line = String.strip line in
     if String.length line > 0
@@ -80,8 +93,10 @@ let () =
       let count = Int.of_string count_str in
       let direction = Char.equal direction_char 'R' in
       (* R=true (right=1), L=false (left=0) *)
-      send_instruction ~direction ~count));
-  (* Print results *)
+      send_instruction ~direction ~count)); (* send instruction *)
+  
+  (* print results *)
+  (* convert bits to integers *)
   let hits_val = Bits.to_int_trunc !(outputs.hits) in
   let passes_val = Bits.to_int_trunc !(outputs.passes) in
   let dial_pos = Bits.to_int_trunc !(outputs.dial_position) in

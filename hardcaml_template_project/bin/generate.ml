@@ -2,10 +2,11 @@ open! Core
 open! Hardcaml
 open! Hardcaml_demo_project
 
+(* generates verilog rtl solution *)
 let generate_day1_solution_rtl () =
   let module C = Circuit.With_interface (Day1_solution.I) (Day1_solution.O) in
   let scope = Scope.create ~auto_label_hierarchical_ports:true () in
-  let circuit = C.create_exn ~name:"day1_solution_top" (Day1_solution.create scope) in
+  let circuit = C.create_exn ~name:"day1_solution_rtl" (Day1_solution.create scope) in
   let rtl_circuits =
     Rtl.create ~database:(Scope.circuit_database scope) Verilog [ circuit ]
   in
@@ -23,7 +24,5 @@ let day1_solution_rtl_command =
 
 let () =
   Command_unix.run
-    (Command.group
-       ~summary:"Day 1 RTL generator"
-       [ "day1-solution", day1_solution_rtl_command ])
+    (Command.group ~summary:"Day 1 RTL generator"[ "day1-solution", day1_solution_rtl_command ])
 ;;
