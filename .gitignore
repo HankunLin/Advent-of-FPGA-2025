@@ -2,7 +2,6 @@ _build
 *.install
 *.merlin
 _opam
-input.txt
 .DS_Store*.bc
 *.exe
 generate.bc

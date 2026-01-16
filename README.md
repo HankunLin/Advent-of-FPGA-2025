@@ -179,8 +179,7 @@ dune runtest
 
 Input file behavior:
 
-- **Recommended:** assuming you have named your puzzle input file as 'input.txt' put your input in `hardcaml_template_project/`.
-- If you keep `input.txt` at the repo root instead, run:
+- **Recommended:** copy your puzzle instructions into the file `hardcaml_template_project/input.txt`, and run:
 
 ```bash
 INPUT_FILE=../input.txt dune runtest
@@ -195,6 +194,21 @@ INPUT_FILE="/absolute/path/to/input.txt" dune runtest
 The testbench then prints the Part 1 and Part 2 results from the simulated hardware module.
 
 You can also use other file names, just change the command to **INPUT_FILE=../<your_file_name>.txt** dune runtest
+
+**Troubleshooting**
+- If those commands don't work, try:
+
+```bash
+dune clean
+dune build
+
+INPUT_FILE=../input.txt dune runtest
+```
+- Another potential fix is:
+
+```bash
+INPUT_FILE=../input.txt dune runtest -f --no-buffer
+```
 
 ## 4) Generate Verilog RTL
 
