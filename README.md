@@ -20,10 +20,9 @@ I am currently a 2nd-year engineering student who has a developing interest in h
 Although I have never touched OCaml before this, I wanted to use this challenge as a gateway to use the language and potentially serve as a reference point for future projects using OCaml; hence, you may notice the large amount of comments on the code.
 
 **TLDR for My Submission**
-
-Code (open-sourced): This repository, and the main RTL code is in `hardcaml_template_project/src/day1_solution.ml` 
-Testbench: `hardcaml_template_project/test/test_day1_solution.ml`
-My Approach and How to Run It: [My Approach](#how-the-solution-works) and [How to Run It](#how-to-run)
+- Code (open-sourced): This repository, and the main RTL code is in [hardcaml_template_project/src/day1_solution.ml](hardcaml_template_project/src/day1_solution.ml)
+- Testbench: [hardcaml_template_project/test/test_day1_solution.ml](hardcaml_template_project/test/test_day1_solution.ml)
+- My Approach and How to Run It: [My Approach](#how-the-solution-works) and [How to Run It](#how-to-run)
 
 # My Problem (AoC Day 1: Secret Entrance)
 
