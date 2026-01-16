@@ -1,4 +1,6 @@
 (* Day 1 solution - lock dial counter with valid-ready handshaking *)
+(* Part 1: Count "hits" - times dial lands on 0 after a rotation *)
+(* Part 2: Count "passes" - times dial crosses through 0 during rotation *)
 
 open! Core
 open! Hardcaml
@@ -19,15 +21,17 @@ module O : sig
     { hits : 'a [@bits 32]
     ; passes : 'a [@bits 32]
     ; instruction_ready : 'a (* asserted when module can accept new instruction *)
+    ; dial_position : 'a [@bits 7] (* current dial position for debug/monitoring *)
+    ; busy : 'a (* high when processing a rotation *)
     }
   [@@deriving hardcaml]
 end
 
 module States : sig
   type t =
-    | Idle
-    | Reducing
-    | Processing
+    | Idle (* Waiting for input *)
+    | Rotate (* Process click-by-click rotation *)
+    | Done (* Rotation complete, check for hit and return to Idle *)
   [@@deriving sexp_of, compare ~localize, enumerate]
 end
 

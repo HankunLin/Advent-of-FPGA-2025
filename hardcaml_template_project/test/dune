@@ -1,14 +1,16 @@
-(library
- (name hardcaml_demo_project_test)
- (libraries
-  core
-  hardcaml
-  hardcaml_demo_project
-  hardcaml_test_harness
-  hardcaml_waveterm
-  re)
+(executable
+ (name test_day1_solution)
+ (libraries core hardcaml hardcaml_demo_project)
  (preprocess
-  (pps ppx_hardcaml ppx_jane))
- (inline_tests
-  (deps
-   (glob_files ../*.txt))))
+  (pps ppx_hardcaml ppx_jane)))
+
+(rule
+ (alias runtest)
+ (deps
+  (glob_files %{workspace_root}/*.txt)
+  test_day1_solution.exe)
+ (action
+  (setenv
+   INPUT_FILE
+   "%{env:INPUT_FILE=input.txt}"
+   (run ./test_day1_solution.exe))))

@@ -3,6 +3,8 @@ open! Hardcaml
 open! Signal
 
 (* Day 1 solution with valid-ready handshaking protocol *)
+(* Part 1: Count "hits" - times dial lands on 0 after a rotation *)
+(* Part 2: Count "passes" - times dial crosses through 0 during rotation *)
 
 module I = struct
   type 'a t =
@@ -18,17 +20,20 @@ end
 module O = struct
   type 'a t =
     { hits : 'a [@bits 32] (* # of times where the dial lands on 0 after a rotation *)
-    ; passes : 'a [@bits 32] (* # of times where the dial passes 0 *)
+    ; passes : 'a
+         [@bits 32] (* # of times where the dial passes through 0 during rotation *)
     ; instruction_ready : 'a (* asserted when module can accept new instruction *)
+    ; dial_position : 'a [@bits 7] (* current dial position for debug/monitoring *)
+    ; busy : 'a (* high when processing a rotation *)
     }
   [@@deriving hardcaml]
 end
 
 module States = struct
   type t =
-    | Idle
-    | Reducing (* Reduce count to < 100 *)
-    | Processing
+    | Idle (* Waiting for input *)
+    | Rotate (* Process click-by-click rotation *)
+    | Done (* Rotation complete, check for hit and return to Idle *)
   [@@deriving sexp_of, compare ~localize, enumerate]
 end
 
@@ -40,38 +45,30 @@ let create _scope (inputs : _ I.t) : _ O.t =
   let dial = Always.Variable.reg spec ~width:7 in
   let hits = Always.Variable.reg spec ~width:32 in
   let passes = Always.Variable.reg spec ~width:32 in
-  let count_remaining = Always.Variable.reg spec ~width:16 in
-  let latched_direction = Always.Variable.reg spec ~width:1 in
+  let remaining = Always.Variable.reg spec ~width:16 in
+  (* clicks left in rotation *)
+  let current_direction = Always.Variable.reg spec ~width:1 in
+  (* stored direction *)
   (* Handshaking: transaction occurs when valid and ready are both high *)
   let transaction = Signal.(inputs.instruction_valid &: sm.is Idle) in
-  (* Use dial value, defaulting to 50 when reset is active *)
-  let dial_current =
-    Signal.mux2 inputs.reset (Signal.of_int_trunc ~width:7 50) dial.value
-  in
-  (* Multi-cycle modulo reducer: subtract 100 repeatedly *)
-  let count_reduced = Signal.(count_remaining.value -: of_int_trunc ~width:16 100) in
-  let needs_reduction = Signal.(count_remaining.value >=: of_int_trunc ~width:16 100) in
-  (* Compute next dial position (count_remaining is already < 100) *)
-  let dial_ext = Signal.uresize dial_current ~width:16 in
-  let count_mod = count_remaining.value in
-  (* Right: (dial + count) % 100, Left: (dial + (100 - count)) % 100 *)
-  let dial_next_right_16 = Signal.(dial_ext +: count_mod) in
-  let dial_next_left_16 =
-    Signal.(dial_ext +: (of_int_trunc ~width:16 100 -: count_mod))
-  in
-  let dial_next_16 =
-    Signal.mux2 latched_direction.value dial_next_right_16 dial_next_left_16
-  in
-  (* Final mod 100 on result (only need to subtract once since inputs < 200) *)
-  let dial_next_final =
+  (* Compute next dial position for single-click rotation *)
+  (* Right (direction=1): dial+1, wrap 99->0 *)
+  (* Left (direction=0): dial-1, wrap 0->99 *)
+  let dial_plus_one =
     Signal.mux2
-      Signal.(dial_next_16 >=: of_int_trunc ~width:16 100)
-      Signal.(dial_next_16 -: of_int_trunc ~width:16 100)
-      dial_next_16
+      Signal.(dial.value ==: of_int_trunc ~width:7 99)
+      (Signal.zero 7)
+      Signal.(dial.value +:. 1)
   in
-  let dial_next = Signal.select dial_next_final ~high:6 ~low:0 in
-  (* Check if dial lands on zero *)
-  let is_hit = Signal.(dial_next ==: Signal.zero 7) in
+  let dial_minus_one =
+    Signal.mux2
+      Signal.(dial.value ==: Signal.zero 7)
+      (Signal.of_int_trunc ~width:7 99)
+      Signal.(dial.value -:. 1)
+  in
+  let dial_next_step = Signal.mux2 current_direction.value dial_plus_one dial_minus_one in
+  (* Check if this step crosses zero (dial lands on 0 after this click) *)
+  let is_pass = Signal.(dial_next_step ==: Signal.zero 7) in
   (* Sequential logic with Always DSL *)
   let open Always in
   compile
@@ -80,28 +77,41 @@ let create _scope (inputs : _ I.t) : _ O.t =
         [ dial <-- Signal.of_int_trunc ~width:7 50
         ; hits <-- Signal.zero 32
         ; passes <-- Signal.zero 32
-        ; count_remaining <-- Signal.zero 16
-        ; latched_direction <-- Signal.zero 1
+        ; remaining <-- Signal.zero 16
+        ; current_direction <-- Signal.zero 1
         ; sm.set_next Idle
         ]
         [ sm.switch
             [ ( Idle
               , [ when_
                     transaction
-                    [ count_remaining <-- inputs.count
-                    ; latched_direction <-- inputs.direction
-                    ; sm.set_next Reducing
+                    [ (* Load instruction parameters *)
+                      remaining <-- inputs.count
+                    ; current_direction <-- inputs.direction
+                    ; (* If count is 0, stay in Idle (no rotation needed) *)
+                      if_
+                        Signal.(inputs.count ==: Signal.zero 16)
+                        [ sm.set_next Idle ]
+                        [ sm.set_next Rotate ]
                     ]
                 ] )
-            ; ( Reducing
-              , [ if_
-                    needs_reduction
-                    [ count_remaining <-- count_reduced (* Subtract 100 and stay *) ]
-                    [ (* count < 100, ready to compute dial *) sm.set_next Processing ]
+            ; ( Rotate
+              , [ (* Process one click per cycle *)
+                  dial <-- dial_next_step
+                ; (remaining <-- Signal.(remaining.value -:. 1))
+                ; (* Count passes: when dial lands on 0 during rotation *)
+                  when_ is_pass [ (passes <-- Signal.(passes.value +:. 1)) ]
+                ; (* Check if this is the last click *)
+                  if_
+                    Signal.(remaining.value ==:. 1)
+                    [ (* Last click - go to Done to finalize *) sm.set_next Done ]
+                    [ (* More clicks remaining - stay in Rotate *) sm.set_next Rotate ]
                 ] )
-            ; ( Processing
-              , [ dial <-- dial_next
-                ; when_ is_hit [ (hits <-- Signal.(hits.value +:. 1)) ]
+            ; ( Done
+              , [ (* Check if final dial position is 0 (a hit) *)
+                  when_
+                    Signal.(dial.value ==: Signal.zero 7)
+                    [ (hits <-- Signal.(hits.value +:. 1)) ]
                 ; sm.set_next Idle
                 ] )
             ]
@@ -110,5 +120,7 @@ let create _scope (inputs : _ I.t) : _ O.t =
   { O.hits = hits.value
   ; passes = passes.value
   ; instruction_ready = sm.is Idle (* Ready when in Idle state *)
+  ; dial_position = dial.value
+  ; busy = Signal.(~:(sm.is Idle))
   }
 ;;
