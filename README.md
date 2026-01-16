@@ -15,6 +15,7 @@ The [2025 Advent of FPGA Challenge](https://blog.janestreet.com/advent-of-fpga-c
 - https://ocamlstreet.gitbook.io/hardcaml-wiki
 
 **My Background**
+
 I am currently a 2nd-year engineering student who has a developing interest in hardware engineering (particularly digital design). Other than practicing on [HDLBits](https://hdlbits.01xz.net/wiki/Main_Page), I have limited expeirence writing HDL, so I plan on using this challenge as an opportunity to get more involved as I begin self-learning digital design more in-depth.
 Although I have never touched OCaml before this, I wanted to use this challenge as a gateway to use the language and potentially serve as a reference point for future projects using OCaml; hence, you may notice the large amount of comments on the code.
 
@@ -38,7 +39,7 @@ TLDR of Part 2 of Day 1: Secret Entrance:
 # Solution Approach
 
 To find the solution, I first solved the problem using Python, a high-level language which I find effective for laying out and solving problems.
-This solution served as my base logic for solving the problem and is available as solution.py
+This solution served as my base logic for solving the problem and is available as [solution.py](solution.py)
 
 # How the Solution Works
 
@@ -104,7 +105,7 @@ Here is how to run the code by a Hardcaml/OCaml implementation with a testbench 
 
 ### Option A: download a ZIP
 
-1. Click **Code -> Download ZIP** on GitHub.
+1. Click Code -> Download ZIP on GitHub.
 2. Unzip it.
 3. `cd` into the unzipped folder.
 
@@ -131,7 +132,7 @@ opam init
 
 ### Installing OCaml / OxCaml / Hardcaml
 
-Hardcaml is distributed through opam, and Jane Street recommends using Hardcaml with **OxCaml** (an OCaml compiler that includes Jane Street compiler extensions).
+Hardcaml is distributed through opam, and Jane Street recommends using Hardcaml with OxCaml (an OCaml compiler that includes Jane Street compiler extensions).
 
 1. Follow the official OxCaml install guide (it sets up opam repos + a compiler switch):
   - https://oxcaml.org/get-oxcaml/
@@ -187,7 +188,7 @@ INPUT_FILE="/absolute/path/to/input.txt" dune runtest
 
 The testbench then prints the Part 1 and Part 2 results from the simulated hardware module.
 
-Other you can also use other file names, just change the command to INPUT_FILE=../<your_file_name>.txt dune runtest
+You can also use other file names, just change the command to **INPUT_FILE=../<your_file_name>.txt** dune runtest
 
 ## 4) Generate Verilog RTL
 
