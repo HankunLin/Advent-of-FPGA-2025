@@ -133,12 +133,14 @@ python3 solution.py
 
 It reads `input.txt` from the repo root and prints the Part 1 and Part 2 answers.
 
+**Where to put the input file (Python):** place your AoC input at the repo root as `input.txt`.
+
 ## 3) Run the Hardcaml/OCaml solution (simulation + tests)
 
 ### Prerequisites
 
 - `opam` (OCaml package manager)
-- OCaml >= 5.1
+- An OCaml compiler (either stock OCaml >= 5.1, or Jane Street’s OxCaml)
 
 On macOS, a common setup is installing opam via Homebrew:
 
@@ -146,6 +148,32 @@ On macOS, a common setup is installing opam via Homebrew:
 brew install opam
 opam init
 ```
+
+### Installing OCaml / OxCaml / Hardcaml
+
+Hardcaml is distributed through opam. Jane Street recommends using Hardcaml with **OxCaml** (a bleeding-edge OCaml compiler that includes Jane Street compiler extensions, while staying compatible with typical OCaml code). In many Hardcaml repos, the OxCaml-compatible version of the code lives on a branch named `with-extensions`.
+
+**Option A (recommended): OxCaml + Hardcaml**
+
+1. Follow the official OxCaml install guide (it sets up opam repos + a compiler switch):
+  - https://oxcaml.org/get-oxcaml/
+2. Select the OxCaml switch in your shell (example from the Hardcaml template README):
+
+```bash
+opam switch 5.2.0+ox
+eval "$(opam env)"
+```
+
+3. Install Hardcaml and common Hardcaml project dependencies:
+
+```bash
+opam install -y hardcaml hardcaml_test_harness hardcaml_waveterm ppx_hardcaml
+opam install -y core core_unix ppx_jane rope re dune
+```
+
+**Option B: Stock OCaml + opam**
+
+If you don’t want OxCaml, you can use regular OCaml (>= 5.1) and still build this project. The simplest way is to create a local opam switch for this repo (see below) and let `opam install . --deps-only` pull what you need.
 
 ### Build & test
 
@@ -170,12 +198,20 @@ dune runtest
 
 Input file behavior:
 
-- By default the testbench uses `hardcaml_template_project/input.txt`.
-- You can point it at the repo-root input with:
+- **Recommended:** put your input at `hardcaml_template_project/input.txt` (this is the default).
+- If you keep `input.txt` at the repo root instead, run:
 
 ```bash
 INPUT_FILE=../input.txt dune runtest
 ```
+
+- If your input file is somewhere else, you can also pass an absolute path:
+
+```bash
+INPUT_FILE="/absolute/path/to/input.txt" dune runtest
+```
+
+The testbench first checks the path you provide; if it doesn’t exist and you provided a relative path, it also tries `../<path>`.
 
 The testbench prints the Part 1 and Part 2 results from the simulated hardware module.
 
@@ -189,7 +225,7 @@ dune exec -- bin/generate.exe day1-solution > generated_rtl/day1_solution.v
 
 This writes the synthesized Verilog for the Hardcaml design to `hardcaml_template_project/generated_rtl/day1_solution.v`.
 
-## Troubleshooting
+## Acknowledgements
 
 - If `eval "$(opam env)"` seems to do nothing, run it in every new terminal session (or add it to your shell profile).
 - If `dune` isn’t found after creating the switch, re-run `eval "$(opam env)"` and confirm the switch is active with `opam switch`.
