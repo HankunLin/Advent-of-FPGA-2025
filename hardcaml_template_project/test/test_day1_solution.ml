@@ -87,6 +87,6 @@ let () =
   let dial_pos = Bits.to_int_trunc !(outputs.dial_position) in
   printf "\n=== RESULTS ===\n";
   printf "Final dial position: %d\n" dial_pos;
-  printf "Password (Pt.1):   %d\n" hits_val;
+  printf "Password (Pt.1): %d\n" hits_val;
   printf "Password (Pt.2): %d\n" passes_val
 ;;
