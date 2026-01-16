@@ -14,6 +14,10 @@ The [2025 Advent of FPGA Challenge](https://blog.janestreet.com/advent-of-fpga-c
 - https://blog.janestreet.com/advent-of-hardcaml-2024/ 
 - https://ocamlstreet.gitbook.io/hardcaml-wiki
 
+**My Background**
+I am currently a 2nd-year engineering student who has a developing interest in hardware engineering (particularly digital design). Other than practicing on [HDLBits](https://hdlbits.01xz.net/wiki/Main_Page), I have limited expeirence writing HDL, so I plan on using this challenge as an opportunity to get more involved as I begin self-learning digital design more in-depth.
+Although I have never touched OCaml before this, I wanted to use this challenge as a gateway to use the language and potentially serve as a reference point for future projects using OCaml; hence, you may notice the large amount of comments on the code.
+
 # My Problem (AoC Day 1: Secret Entrance)
 
 Due to time constraints and my experience with Hardcaml, I will be solving the AoC Day 1 problem [“Secret Entrance”](https://adventofcode.com/2025/day/1) for the Advent of FPGA.
@@ -36,50 +40,49 @@ TLDR of Part 2 of Day 1: Secret Entrance:
 To find the solution, I first solved the problem using Python, a high-level language which I find effective for laying out and solving problems.
 This solution served as my base logic for solving the problem and is available as solution.py
 
-# How the Hardcaml solution works
+# How the Solution Works
 
-The Hardcaml design lives in `hardcaml_template_project/src/day1_solution.ml` and is meant to behave like a little “dial machine” that you stream instructions into.
+The main Hardcaml code is located in the file: `hardcaml_template_project/src/day1_solution.ml` and is meant to behave like a dial machine that you are able to stream instructions into.
 
 At a high level:
-
-- The design keeps track of the current dial position (0–99), starting at 50.
-- Each input instruction says “turn left/right by N clicks”.
+- The design keeps track of the current dial position (0–99), starting at 50
+- Each input instruction says “turn left/right by n clicks”
 - While it turns, it counts:
-  - `passes`: every time the dial *crosses onto* 0 during the turn (Part 2)
-  - `hits`: if the dial ends the full rotation on 0 (Part 1)
+  - `hits`: every time the dial ends a rotation instruction on 0 (password for part 1)
+  - `passes`: every time the dial passes 0 during a rotation instruction (password for part 2)
 
-## Inputs/outputs and handshake
+This is similar in logic to my python code.
+
+## I/O and Handshake
 
 The module uses a simple ready/valid handshake so the testbench can safely stream one instruction at a time:
 
-- Inputs: `direction` (0=left, 1=right), `count` (16-bit), and `instruction_valid`.
-- Output: `instruction_ready` goes high when the module is idle and ready to accept a new instruction.
+- Inputs: `direction` (0=left, 1=right), `count` (16-bit), and `instruction_valid`
+- Output: `instruction_ready` goes high when the module is idle and is ready to accept a new instruction
 
 An instruction is “accepted” on a clock edge when both `instruction_valid` and `instruction_ready` are high.
 
-## State machine
+## State Machine
 
-Internally, it’s a small FSM with a few registers:
+The state machine is a small FSM with a few registers and conditions:
 
-- `dial` (7 bits): current dial position (wraps 0 ↔ 99)
-- `remaining` (16 bits): how many clicks are left in the current instruction
+- `dial` (7 bits): current dial position (wraps 0 -> 99)
+- `remaining` (16 bits): clicks are left in the current instruction
 - `current_direction` (1 bit): latched direction for the active instruction
-- `passes`/`hits` (32 bits): the running counters
+- `passes`/`hits` (32 bits): running counters
 
-The FSM has three states:
+The FSM has 3 states:
 
 - **Idle**: waits for a handshake. On a transaction, it latches `direction` and `count` into registers and moves to **Rotate**.
-- **Rotate**: advances the dial one click per cycle.
-  - Each cycle computes the next position with wraparound (99→0 when rotating right, 0→99 when rotating left).
-  - If the *new* dial position is 0, it increments `passes` (this matches the “crosses 0” interpretation).
-  - Decrements `remaining` each cycle; when the last click has been applied, it moves to **Done**.
+- **Rotate**: advances the dial one click per cycle
+  - Each cycle computes the next position with wraparound (99 -> 0 when rotating right, 0- > 99 when rotating left)
+  - If the new dial position is 0, it increments `passes`
+  - It also decrements `remaining` each cycle; when the last click has been applied, it moves to **Done**.
 - **Done**: checks whether the final `dial` is 0 and increments `hits` if so, then returns to **Idle**.
 
-One realistic tradeoff here: the implementation is intentionally “one click per cycle”, which keeps the logic simple and obviously synthesizable, but it means a big `count` takes a lot of cycles to simulate (and would take that many cycles in hardware too).
+## Testbench
 
-## Testbench / how it runs end-to-end
-
-The simulation harness is `hardcaml_template_project/test/test_day1_solution.ml`.
+The testbench is located in `hardcaml_template_project/test/test_day1_solution.ml`.
 
 What it does:
 
@@ -87,26 +90,21 @@ What it does:
 2. Resets the design (sets dial=50, counters=0, state=Idle).
 3. Reads the puzzle input file line-by-line (`INPUT_FILE` env var; defaults to `input.txt`).
 4. For each line:
-   - Parses the direction and count.
-   - Waits until `instruction_ready` is high.
-   - Asserts `instruction_valid` for a cycle to complete the ready/valid handshake.
-   - Waits until `instruction_ready` goes high again (meaning the FSM is back in **Idle**).
+   - Parses the direction and count
+   - Waits until `instruction_ready` is high
+   - Asserts `instruction_valid` for a cycle to complete the ready/valid handshake
+   - Waits until `instruction_ready` goes high again (meaning the FSM is back in **Idle**)
 5. Prints the final `hits` (Part 1), `passes` (Part 2), and final dial position.
 
-That handshake loop is why the testbench is robust: it doesn’t assume anything about how long a rotation takes — it just waits for the module to say it’s ready.
+# How to Run
 
-# How to run
+Here is how to run the code by a Hardcaml/OCaml implementation with a testbench + RTL generator: `hardcaml_template_project/`
 
-This repo contains two ways to run Day 1:
-
-- A Python reference implementation: `solution.py`
-- A Hardcaml/OCaml implementation with a testbench + RTL generator: `hardcaml_template_project/`
-
-## 1) Download the code
+## 1) Download or Clone the Code
 
 ### Option A: download a ZIP
 
-1. Click **Code → Download ZIP** on GitHub.
+1. Click **Code -> Download ZIP** on GitHub.
 2. Unzip it.
 3. `cd` into the unzipped folder.
 
@@ -117,24 +115,6 @@ git clone <REPO_URL>
 cd "Advent of FPGA 2025"
 ```
 
-## 2) Run the Python reference solution
-
-### Prerequisites
-
-- Python 3 (no extra packages required)
-
-### Run
-
-From the repo root:
-
-```bash
-python3 solution.py
-```
-
-It reads `input.txt` from the repo root and prints the Part 1 and Part 2 answers.
-
-**Where to put the input file (Python):** place your AoC input at the repo root as `input.txt`.
-
 ## 3) Run the Hardcaml/OCaml solution (simulation + tests)
 
 ### Prerequisites
@@ -142,7 +122,7 @@ It reads `input.txt` from the repo root and prints the Part 1 and Part 2 answers
 - `opam` (OCaml package manager)
 - An OCaml compiler (either stock OCaml >= 5.1, or Jane Street’s OxCaml)
 
-On macOS, a common setup is installing opam via Homebrew:
+On macOS (the OS I built it on), a common setup is installing opam via Homebrew:
 
 ```bash
 brew install opam
@@ -151,9 +131,7 @@ opam init
 
 ### Installing OCaml / OxCaml / Hardcaml
 
-Hardcaml is distributed through opam. Jane Street recommends using Hardcaml with **OxCaml** (a bleeding-edge OCaml compiler that includes Jane Street compiler extensions, while staying compatible with typical OCaml code). In many Hardcaml repos, the OxCaml-compatible version of the code lives on a branch named `with-extensions`.
-
-**Option A (recommended): OxCaml + Hardcaml**
+Hardcaml is distributed through opam, and Jane Street recommends using Hardcaml with **OxCaml** (an OCaml compiler that includes Jane Street compiler extensions).
 
 1. Follow the official OxCaml install guide (it sets up opam repos + a compiler switch):
   - https://oxcaml.org/get-oxcaml/
@@ -171,22 +149,18 @@ opam install -y hardcaml hardcaml_test_harness hardcaml_waveterm ppx_hardcaml
 opam install -y core core_unix ppx_jane rope re dune
 ```
 
-**Option B: Stock OCaml + opam**
-
-If you don’t want OxCaml, you can use regular OCaml (>= 5.1) and still build this project. The simplest way is to create a local opam switch for this repo (see below) and let `opam install . --deps-only` pull what you need.
-
-### Build & test
+### Build & Test
 
 From the repo root:
 
 ```bash
 cd hardcaml_template_project
 
-# Create a local switch for this project (one-time)
+# Create a local switch for this project
 opam switch create . 5.1.1 -y
 eval "$(opam env)"
 
-# Install dependencies (one-time)
+# Install dependencies
 opam install . --deps-only --with-test -y
 
 # Build
@@ -198,7 +172,7 @@ dune runtest
 
 Input file behavior:
 
-- **Recommended:** put your input at `hardcaml_template_project/input.txt` (this is the default).
+- **Recommended:** assuming you have named your puzzle input file as 'input.txt' put your input in `hardcaml_template_project/`.
 - If you keep `input.txt` at the repo root instead, run:
 
 ```bash
@@ -211,9 +185,9 @@ INPUT_FILE=../input.txt dune runtest
 INPUT_FILE="/absolute/path/to/input.txt" dune runtest
 ```
 
-The testbench first checks the path you provide; if it doesn’t exist and you provided a relative path, it also tries `../<path>`.
+The testbench then prints the Part 1 and Part 2 results from the simulated hardware module.
 
-The testbench prints the Part 1 and Part 2 results from the simulated hardware module.
+Other you can also use other file names, just change the command to INPUT_FILE=../<your_file_name>.txt dune runtest
 
 ## 4) Generate Verilog RTL
 
@@ -227,6 +201,5 @@ This writes the synthesized Verilog for the Hardcaml design to `hardcaml_templat
 
 ## Acknowledgements
 
-- If `eval "$(opam env)"` seems to do nothing, run it in every new terminal session (or add it to your shell profile).
-- If `dune` isn’t found after creating the switch, re-run `eval "$(opam env)"` and confirm the switch is active with `opam switch`.
+- Thank you to Jane Street for hosting this challenge and providing the Hardcaml project template which was very helpful for setting up and creating my solution. It was fun and I learned a lot from it!
 
