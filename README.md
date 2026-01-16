@@ -23,6 +23,7 @@ Although I have never touched OCaml before this, I wanted to use this challenge 
 - Code (open-sourced): This repository, and the main RTL code is in [hardcaml_template_project/src/day1_solution.ml](hardcaml_template_project/src/day1_solution.ml)
 - Testbench: [hardcaml_template_project/test/test_day1_solution.ml](hardcaml_template_project/test/test_day1_solution.ml)
 - My Approach and How to Run It: [My Approach](#how-the-solution-works) and [How to Run It](#how-to-run)
+(note: I did not run this on an FPGA)
 
 # My Problem (AoC Day 1: Secret Entrance)
 
