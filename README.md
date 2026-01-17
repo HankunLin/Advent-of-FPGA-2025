@@ -196,7 +196,7 @@ The testbench then prints the Part 1 and Part 2 results from the simulated hardw
 You can also use other file names, just change the command to:
 
 ```bash
-**INPUT_FILE=../<your_file_name>.txt dune runtest
+INPUT_FILE=../<your_file_name>.txt dune runtest
 ```
 
 **Troubleshooting**
