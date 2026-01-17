@@ -14,12 +14,12 @@ The [2025 Advent of FPGA Challenge](https://blog.janestreet.com/advent-of-fpga-c
 - https://blog.janestreet.com/advent-of-hardcaml-2024/ 
 - https://ocamlstreet.gitbook.io/hardcaml-wiki
 
-**My Background**
+**My Background:**
 
 I am currently a 2nd-year engineering student who has a developing interest in hardware engineering (particularly digital design). Other than practicing on [HDLBits](https://hdlbits.01xz.net/wiki/Main_Page), I have limited expeirence writing HDL, so I plan on using this challenge as an opportunity to get more involved as I begin self-learning digital design more in-depth.
 Although I have never touched OCaml before this, I wanted to use this challenge as a gateway to use the language and potentially serve as a reference point for future projects using OCaml; hence, you may notice the large amount of comments on the code.
 
-**TLDR for My Submission**
+**TLDR for My Submission:**
 - Code (open-sourced): This repository, and the main RTL code is in [hardcaml_template_project/src/day1_solution.ml](hardcaml_template_project/src/day1_solution.ml)
 - Testbench: [hardcaml_template_project/test/test_day1_solution.ml](hardcaml_template_project/test/test_day1_solution.ml)
 - My Approach and How to Run It: [My Approach](#how-the-solution-works) and [How to Run It](#how-to-run)
