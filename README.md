@@ -122,7 +122,7 @@ git clone <REPO_URL>
 cd "Advent of FPGA 2025"
 ```
 
-## 3) Run the Hardcaml/OCaml solution (simulation + tests)
+## 2) Run the Hardcaml/OCaml solution (simulation + tests)
 
 ### Prerequisites
 
@@ -214,7 +214,7 @@ INPUT_FILE=../input.txt dune runtest
 INPUT_FILE=../input.txt dune runtest -f --no-buffer
 ```
 
-## 4) Generate Verilog RTL
+## 3) Generate Verilog RTL
 
 From `hardcaml_template_project/`:
 
