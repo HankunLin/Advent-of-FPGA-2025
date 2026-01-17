@@ -1,6 +1,6 @@
 # Advent of FPGA (2025)
 
-The [2025 Advent of FPGA Challenge](https://blog.janestreet.com/advent-of-fpga-challenge-2025/) is a hardware engineering challenge hosted by [Jane Street](https://www.janestreet.com/) based on the annual [Advent of Code](https://adventofcode.com/) (AoC) puzzles. The Advent of FPGA expands on the AoC and Jane Street’s puzzle solving culture by challenging participants to solve AoC puzzles by building synthesizable RTL with realistic I/O points. Additional emphasis and recognition is provided for those who build solutions using Hardcaml, Jane Street’s OCaml-based hardware DSL.
+The [2025 Advent of FPGA Challenge](https://blog.janestreet.com/advent-of-fpga-challenge-2025/) is a hardware engineering challenge hosted by [Jane Street](https://www.janestreet.com/) based on the annual [Advent of Code](https://adventofcode.com/) (AoC) puzzles. The Advent of FPGA expands on the AoC and Jane Street’s puzzle solving culture by challenging participants to solve AoC puzzles by building synthesizable RTL with realistic I/O. Additional emphasis and recognition is provided for those who build solutions using Hardcaml, Jane Street’s OCaml-based hardware DSL.
 
 **Key details for the challenge:**
 - Deadline: all solutions should be submitted [here](https://docs.google.com/forms/d/e/1FAIpQLSeAZ9iw-kS6Di0NtJgCL4ejG9ZWm3li2qrHajT3j3XDBn1uIA/viewform) by January 16, 2026
