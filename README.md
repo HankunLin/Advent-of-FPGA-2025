@@ -163,11 +163,11 @@ From the repo root:
 ```bash
 cd hardcaml_template_project
 
-# Create a local switch for this project
+# Create a local switch for this project if needed
 opam switch create . 5.1.1 -y
 eval "$(opam env)"
 
-# Install dependencies
+# Install dependencies if needed
 opam install . --deps-only --with-test -y
 
 # Build
